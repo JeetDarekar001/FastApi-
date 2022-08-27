@@ -73,3 +73,20 @@ async def create_book(book_title,book_author):
                 current_book_id=x
     BOOKS[f'book_{current_book_id+1}']={'title':book_title,'author':book_author}
     return BOOKS[f'book_{current_book_id+1}']
+
+#Put Request Updating book title and book author
+@app.put("/{book_name}")
+async def update_book(book_name:str,book_title:str,book_author:str):
+    book_info={'title':book_title,'author':book_title}
+    BOOKS[book_name]=book_info
+    return book_info
+
+@app.delete("/{book_name}")
+async def delete_book(book_name):
+    del BOOKS[book_name]
+    return f'Book {book_name} Deleted'
+
+#Read api with query paramerts
+@app.get("/assignment/get/")
+async def read_book_func(book_name):
+    return BOOKS[book_name]    
