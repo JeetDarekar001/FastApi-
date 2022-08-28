@@ -2,13 +2,22 @@
 from optparse import Option
 from typing import Optional
 from uuid import UUID
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException,Request
+from starlette.responses import JSONResponse
 from models import Book
 app = FastAPI()
 
 BOOKS=[]
 
+class NegtiveNumberException(Exception):
+    def __init__(self, books_to_return):
+        self.books_to_return=books_to_return
 
+
+@app.exception_handler(NegtiveNumberException)
+async def neg_number_exception_handler(request:Request, exception:NegtiveNumberException):
+    return JSONResponse(status_code=418,
+                content={"message":"Number of books cannot be negiteve"})
 
 @app.get("/")
 async def read_all_books(books_to_return:Optional[int]=None):
@@ -16,9 +25,13 @@ async def read_all_books(books_to_return:Optional[int]=None):
     If no book data is found, create_book_no_api() is invoked to initilized BOOKS list, 
     to help
     """
-
     if len(BOOKS)<1:
         create_book_no_api()
+        
+    if books_to_return and books_to_return <0:
+        raise NegtiveNumberException(books_to_return=books_to_return)
+
+    
     
     if books_to_return and len(BOOKS)>=books_to_return>0:
         i=1
@@ -46,9 +59,24 @@ async def create_book(book:Book):
 async def update_book(book_id:UUID, book:Book):
     counter=0
     for x in BOOKS:
+        counter+=1
         if x.id==book_id:
             BOOKS[counter-1]=book
             return BOOKS[counter-1]
+    raise_item_cannot_be_foud_exception()
+
+
+#Delete Request by book_id
+@app.delete('/{book_id}')
+async def delete_book(book_id:UUID):
+    counter=0
+    for x in BOOKS:
+        counter+=1
+        if x.id==book_id:
+            del BOOKS[counter-1]
+            return f'book {book_id} deleted'
+    raise_item_cannot_be_foud_exception()
+
 
 def create_book_no_api():
     """
@@ -80,4 +108,11 @@ def create_book_no_api():
     BOOKS.append(book_3)
     BOOKS.append(book_4)
 
+#Exception Block for 404 book not found for updating and deleting
+def raise_item_cannot_be_foud_exception():
+    raise HTTPException(status_code=404,
+                    detail="Book Not Found",
+                    headers={"X_header-Error":"Nothing to found for UUID"})
 
+
+#Custom Status code for book n
