@@ -41,6 +41,15 @@ async def create_book(book:Book):
     BOOKS.append(book)
     return book
 
+#Put Request
+@app.put("/{book_id}")
+async def update_book(book_id:UUID, book:Book):
+    counter=0
+    for x in BOOKS:
+        if x.id==book_id:
+            BOOKS[counter-1]=book
+            return BOOKS[counter-1]
+
 def create_book_no_api():
     """
     This blocks appends the book data whenever server restarts just to have data to perfom validation of RestApi's
@@ -70,3 +79,5 @@ def create_book_no_api():
     BOOKS.append(book_2)
     BOOKS.append(book_3)
     BOOKS.append(book_4)
+
+
